@@ -12,7 +12,7 @@ Every morning at the time you set, a Telegram message arrives with:
 - **One thing to read deeper** — a single longer-form piece selected by an explicit four-point rubric (or honestly skipped if nothing meets the bar)
 - **🎯 View-forming question** — one controversial question forced by today's stories, designed to make you take a position
 
-Sources are tiered: **FT** (primary, full-body via curl_cffi-based paywall bypass) · **WSJ** (peer, same approach) · **Reuters** (breaking-facts backstop) · **CNBC + central banks** (aggregator/event-only). Bloomberg is skipped — its bot-protection blocks the fetcher (see [SETUP.md](SETUP.md#bloomberg)).
+Sources are tiered: **FT** (primary, full-body via curl_cffi-based paywall bypass) · **WSJ** (peer, same approach) · **Reuters** (breaking-facts backstop) · **CNBC + central banks** (aggregator/event-only). 
 
 A real example brief lives in [examples/sample-brief.md](examples/sample-brief.md).
 
