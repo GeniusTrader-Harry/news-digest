@@ -1,6 +1,6 @@
 # news-digest
 
-> A Claude Code routine that delivers a curated daily markets briefing to Telegram every morning. Built for finance-recruiting prep — customisable for any beat.
+> A Claude Code routine that delivers a curated daily markets briefing to Telegram every morning. 
 
 ## What you get
 
