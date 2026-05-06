@@ -1,0 +1,27 @@
+# --- Secrets — never commit ---
+.env
+.env.local
+.env.*.local
+*.cookie.txt
+ft_cookie.txt
+wsj_cookie.txt
+bloomberg_cookie.txt
+*_cookie.txt
+
+# --- Local Python env ---
+venv/
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+
+# --- Past briefings (may contain personal context) ---
+archive/
+
+# --- macOS / editor noise ---
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*~
