@@ -170,9 +170,24 @@ Edit `~/.claude/settings.json`. If `permissions.allow` doesn't exist, create it.
       "Bash(/Users/yourname/news-digest/send_telegram.sh)",
       "Bash(/Users/yourname/news-digest/fetch_ft.sh:*)",
       "Bash(/Users/yourname/news-digest/fetch_wsj.sh:*)",
+      "Bash(/Users/yourname/news-digest/discover_wsj.sh:*)",
+      "Bash(curl:*)",
       "Bash(date:*)",
       "Bash(mkdir:*)",
       "Bash(cat:*)",
+      "Bash(echo:*)",
+      "Bash(ls:*)",
+      "Bash(grep:*)",
+      "Bash(sed:*)",
+      "Bash(awk:*)",
+      "Bash(cut:*)",
+      "Bash(tr:*)",
+      "Bash(head:*)",
+      "Bash(tail:*)",
+      "Bash(sort:*)",
+      "Bash(uniq:*)",
+      "Bash(wc:*)",
+      "Bash(python3:*)",
       "Read(/Users/yourname/news-digest/**)",
       "Write(/Users/yourname/news-digest/archive/**)"
     ]
@@ -181,6 +196,8 @@ Edit `~/.claude/settings.json`. If `permissions.allow` doesn't exist, create it.
 ```
 
 This pre-approves the tools the routine uses, so the scheduled task fires without permission prompts.
+
+**Why so many Bash entries?** The agent uses standard Unix text-processing tools (`grep`, `sed`, `head`, `tail`, etc.) to parse fetched HTML/XML between fetcher calls. If any one of these isn't allowlisted, the scheduled task pauses mid-run waiting for an interactive permission prompt — bad for an autonomous routine when you might not be at the laptop. The list above covers everything the agent has needed across multiple test runs.
 
 ## 10. Trust the project folder
 
