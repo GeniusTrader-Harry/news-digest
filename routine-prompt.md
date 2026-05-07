@@ -16,27 +16,36 @@ You are generating <USER_NAME>'s daily commercial-awareness briefing. They are p
 
 Today's date: run `date "+%A, %d %B %Y"` first, and use that as the dated header.
 
-## Step 1 — Gather news (parallel WebSearch / WebFetch)
+## Step 1 — Gather news (parallel `Bash` + `curl`, in ONE message)
 
-Pull TODAY'S top stories (and overnight if pre-market) from these sources, in parallel:
+**Parallelism is required.** Issue ALL source fetches as parallel `Bash` tool calls in a **single message** — Claude Code's Bash tool runs concurrently when multiple invocations appear in one turn, and serialises across turns. Don't fetch FT, WSJ, Reuters, CNBC in separate turns; you'll double the runtime. One turn, many parallel `curl` calls.
 
-- **Reuters** — `https://www.reuters.com/markets/`, `https://www.reuters.com/business/finance/`, `https://www.reuters.com/markets/deals/`
-- **CNBC** — `https://www.cnbc.com/markets/`, `https://www.cnbc.com/deals-and-ipos/`
+Pull TODAY'S top stories (and overnight if pre-market) from these sources:
+
+- **Reuters** — fetch each section page with `curl -sSL --retry 2 --retry-delay 1 -A "Mozilla/5.0" "<URL>"`:
+  - `https://www.reuters.com/markets/`
+  - `https://www.reuters.com/business/finance/`
+  - `https://www.reuters.com/markets/deals/`
+- **CNBC** — same `curl -sSL --retry 2 --retry-delay 1 -A "Mozilla/5.0" "<URL>"` pattern:
+  - `https://www.cnbc.com/markets/`
+  - `https://www.cnbc.com/deals-and-ipos/`
 - **Central bank press releases** (only if there's an FOMC / BoE / ECB / BoJ event today or yesterday): Fed `federalreserve.gov/newsevents/pressreleases.htm`, BoE `bankofengland.co.uk/news`, ECB `ecb.europa.eu/press/pr/date/...`
 - **FT** (subscriber, full-text access via local fetcher) — fetch RSS feeds for triage, then pull full article bodies via the dedicated FT fetcher. See "FT pipeline" below.
-- **WSJ** (subscriber, full-text access via local fetcher) — fetch RSS feeds for triage, then pull full article bodies via the dedicated WSJ fetcher. See "WSJ pipeline" below.
+- **WSJ** (subscriber, full-text access via local fetcher) — discover URLs via the local section-page scraper, then pull full bodies via the dedicated WSJ fetcher. See "WSJ pipeline" below.
 
-Use WebSearch for breaking-news type queries (e.g. "FTSE 100 today", "M&A announcement today", "Fed decision today") to fill gaps the homepages miss.
+Use WebSearch ONLY for breaking-news type queries (e.g. "FTSE 100 today", "M&A announcement today", "Fed decision today") to fill specific gaps the homepages don't cover. Don't substitute WebSearch for the homepage fetches — it returns shallower content.
 
 ### CRITICAL: how to fetch RSS feeds and section pages
 
-**Always use `Bash` + `curl` with a Mozilla user-agent**, not `WebFetch`. WebFetch passes content through an HTML→markdown LLM converter that mangles XML and can mistakenly report "Cloudflare-blocked" on perfectly fine responses. Pattern:
+**Always use `Bash` + `curl` with a Mozilla user-agent**, not `WebFetch`. WebFetch passes content through an HTML→markdown LLM converter that mangles XML and can mistakenly report "Cloudflare-blocked" on perfectly fine responses. Standard pattern (with one automatic retry built in):
 
 ```bash
-curl -sSL -A "Mozilla/5.0" "<URL>"
+curl -sSL --retry 2 --retry-delay 1 -A "Mozilla/5.0" "<URL>"
 ```
 
 This applies to: FT RSS feeds, the Reuters/CNBC homepage and section pages, and any other XML/HTML source page. WebFetch is fine for individual article URLs from outlets without aggressive anti-bot (Reuters articles, CNBC articles), but is unreliable for index pages.
+
+**On transient failures**: if a curl returns non-200, empty body, or times out, retry **once more** with the same flags (the `--retry 2` already retries network-level errors twice automatically; manual re-invocation is for HTTP-level failures). Only declare a source "down" after a manual retry also fails — most failures are 30-second hiccups, not real outages.
 
 ### FT pipeline (special workflow)
 
@@ -76,7 +85,9 @@ WSJ's RSS feeds at `feeds.a.dj.com` periodically go stale (server returns only o
 "<PROJECT_DIR>/discover_wsj.sh" --max 20
 ```
 
-Outputs one wsj.com article URL per line, fresh from today's section pages (Markets, Finance, Business, Economy by default). De-duplicates and strips tracking query strings. Pick the **3–5 most relevant** based on slug content (the slugs are descriptive enough — "memory-makers-are-the-hottest-thing-in-tech", "jpmorgan-offered-1-million-settlement", etc.).
+Outputs one wsj.com article URL per line, fresh from today's section pages (Markets, Finance, Business, Economy by default). De-duplicates and strips tracking query strings. Pick the **3–5 most relevant** based on slug content — most slugs are descriptive enough ("memory-makers-are-the-hottest-thing-in-tech", "jpmorgan-offered-1-million-settlement").
+
+**Unclear-slug fallback**: if 2+ of your top candidates have generic slugs (`market-talk-bd5fa31`, `financial-services-roundup-...`, `closing-bell-...`), don't guess — fetch the first 6–8 with `fetch_wsj.sh` in one call and pick from the actual headlines + deks instead. Wasted fetches are cheap; misjudging a brief's WSJ section is expensive.
 
 **(b) Fetch full bodies** — call the body fetcher with the URLs you picked:
 
@@ -134,9 +145,11 @@ Every story (except the deep-read and the view-forming question) gets a `[⏣ Th
 
 **Continuity rule**: if you covered "AI capex" yesterday, today's AI-capex story uses the same tag. Reuse > invent.
 
+**Novel-story fallback**: if a story doesn't fit any existing theme, use the **closest** existing fit (themes are *directions*, not strict labels — "Term premium" can absorb a one-off long-end yields story even if it's not a pure fiscal angle). Do NOT invent one-off tags — they fragment cross-day continuity, which is the entire point of the system. If absolutely nothing in the dictionary fits and the story still belongs in the brief, **omit the tag for that story only** rather than inventing one. A theme only earns dictionary entry after recurring 3+ times in 1–2 weeks (Lifecycle rule above).
+
 ### Earnings-season auto-mode
 
-If today's news flow contains **3+ earnings releases** (visible from the Reuters/CNBC homepages or FT companies feed), prepend an `*📊 Earnings today*` mini-section above Macro & rates:
+**Trigger**: count earnings stories among items you've **already fetched** in Step 1 where the **headline** mentions a ticker (or company name) AND an earnings keyword (any of: `Q1`, `Q2`, `Q3`, `Q4`, `earnings`, `results`, `beats`, `misses`, `EPS`, `revenue`). If the count is ≥3, prepend an `*📊 Earnings today*` mini-section above Macro & rates:
 
 ```
 *📊 Earnings today*
@@ -239,16 +252,26 @@ _Generated {HH:MM} London time._
 
 ## Step 3 — Deliver to Telegram
 
-Save the briefing to `<PROJECT_DIR>/archive/$(date +%F).md`, then pipe it to the sender:
+Save the briefing to the archive file, then pipe to the sender. **Telegram delivery is the priority** — if the archive save fails (disk full, permission error), log the error but **still send to Telegram**. The live brief is what the user reads; the archive is a convenience copy.
 
 ```bash
 BRIEF_FILE="<PROJECT_DIR>/archive/$(date +%F).md"
-# (write the briefing markdown to $BRIEF_FILE)
+# Write the briefing markdown to $BRIEF_FILE — if this fails, continue anyway.
+# Then send (this is the irreplaceable step):
 cat "$BRIEF_FILE" | "<PROJECT_DIR>/send_telegram.sh"
 ```
 
 The sender chunks at 3800 chars, posts to Telegram, and falls back to plain-text if Markdown parsing fails.
 
-## Step 4 — Confirm
+## Step 4 — Confirm or surface an error
 
-After the sender prints `OK: briefing sent.`, your run is complete. If anything failed (no stories found, send error, FT/WSJ cookie expired), report the error clearly so the user can debug — do NOT send a half-empty briefing.
+**Success path**: the sender prints `OK: briefing sent.` → run complete.
+
+**Failure path — never go silent**. If the run errors before a brief was assembled (e.g. all primary sources failed, every FT/WSJ fetch returned ## ERROR, synthesis crashed), the user has no other channel to learn the run broke. **Send a short error notice via the same sender:**
+
+```bash
+echo "❌ news-digest failed at $(date +%H:%M): <one-line reason>" \
+  | "<PROJECT_DIR>/send_telegram.sh"
+```
+
+Always end with a definite signal: either the brief lands, or an error notice does. Never silence. Half-empty briefings (the brief assembled but missing key sections) are still acceptable to send — flag the missing sections in the warning footer rather than aborting the whole run.
