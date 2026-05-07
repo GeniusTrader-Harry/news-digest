@@ -28,17 +28,33 @@ Pull TODAY'S top stories (and overnight if pre-market) from these sources, in pa
 
 Use WebSearch for breaking-news type queries (e.g. "FTSE 100 today", "M&A announcement today", "Fed decision today") to fill gaps the homepages miss.
 
+### CRITICAL: how to fetch RSS feeds and section pages
+
+**Always use `Bash` + `curl` with a Mozilla user-agent**, not `WebFetch`. WebFetch passes content through an HTML→markdown LLM converter that mangles XML and can mistakenly report "Cloudflare-blocked" on perfectly fine responses. Pattern:
+
+```bash
+curl -sSL -A "Mozilla/5.0" "<URL>"
+```
+
+This applies to: FT RSS feeds, the Reuters/CNBC homepage and section pages, and any other XML/HTML source page. WebFetch is fine for individual article URLs from outlets without aggressive anti-bot (Reuters articles, CNBC articles), but is unreliable for index pages.
+
 ### FT pipeline (special workflow)
 
-The FT is paywalled and Cloudflare-protected, so vanilla WebFetch fails. Use this two-step flow:
+The FT is paywalled and Cloudflare-protected on article URLs, so vanilla WebFetch fails on bodies. Use this two-step flow:
 
-**(a) Triage via RSS** — fetch these XML feeds (no auth, public):
+**(a) Triage via RSS** — fetch these XML feeds with `curl` (no auth, public):
 - `https://www.ft.com/rss/home`
 - `https://www.ft.com/markets?format=rss`
 - `https://www.ft.com/companies?format=rss`
 - `https://www.ft.com/lex?format=rss`
 
+```bash
+curl -sSL -A "Mozilla/5.0" "https://www.ft.com/markets?format=rss"
+```
+
 Each item has `<title>`, `<description>` (one-line dek), `<link>` (the article URL), `<pubDate>`. Use these to identify the **3–5 most relevant FT stories for today's themes** (macro, equities, M&A, AM). Skip items older than 36 hours unless still developing.
+
+**Staleness check** — if all items in a feed are dated >7 days old, the feed is stuck (server-side cache issue). Skip that feed and try the next; do NOT use stale URLs as the article bodies have likely been moved.
 
 **(b) Fetch full bodies** — call the local fetcher with the URLs you picked:
 
@@ -50,28 +66,29 @@ It returns clean markdown for each article: headline, byline + date, dek, full a
 
 If any FT URL returns an `## ERROR:` block (likely cookie expiry), do NOT fabricate content. Skip that story and include a single line at the bottom of the brief: `_⚠️ FT cookie may need refresh — N FT articles failed to fetch._`
 
-### WSJ pipeline (special workflow — same shape as FT)
+### WSJ pipeline (special workflow — section-page discovery, NOT RSS)
 
-Same two-step pattern: RSS for triage, local fetcher for body.
+WSJ's RSS feeds at `feeds.a.dj.com` periodically go stale (server returns only old January-2025 articles for days at a time). **Do not use them.** Instead, discover URLs by scraping wsj.com section pages — same `curl_cffi` + cookie infrastructure as the body fetcher.
 
-**(a) Triage via RSS** — fetch these XML feeds (no auth, public):
-- `https://feeds.a.dj.com/rss/RSSMarketsMain.xml`
-- `https://feeds.a.dj.com/rss/RSSWorldNews.xml`
-- `https://feeds.a.dj.com/rss/WSJcomUSBusiness.xml`
-- `https://feeds.a.dj.com/rss/RSSWSJD.xml` (tech)
-- `https://feeds.a.dj.com/rss/RSSOpinion.xml`
+**(a) URL discovery** — call the local discovery script:
 
-Each item has `<title>`, `<description>` (often 1–2 sentences with numbers), `<link>` (the wsj.com URL), `<pubDate>`. Identify the **3–5 most relevant WSJ stories for today's themes** that aren't already better covered by FT or Reuters. Skip items older than 36 hours unless still developing.
+```bash
+"<PROJECT_DIR>/discover_wsj.sh" --max 20
+```
 
-**(b) Fetch full bodies** — call the local fetcher with the URLs you picked:
+Outputs one wsj.com article URL per line, fresh from today's section pages (Markets, Finance, Business, Economy by default). De-duplicates and strips tracking query strings. Pick the **3–5 most relevant** based on slug content (the slugs are descriptive enough — "memory-makers-are-the-hottest-thing-in-tech", "jpmorgan-offered-1-million-settlement", etc.).
+
+**(b) Fetch full bodies** — call the body fetcher with the URLs you picked:
 
 ```bash
 "<PROJECT_DIR>/fetch_wsj.sh" URL1 URL2 URL3 ...
 ```
 
-Returns clean markdown for each article: headline, byline + date, dek, full article body, source link. Use this body when summarising — quote sparingly and accurately, don't invent figures.
+Returns clean markdown for each article. Use this body when summarising — quote sparingly and accurately, don't invent figures.
 
 If any WSJ URL returns an `## ERROR:` block (likely cookie expiry), do NOT fabricate content. Skip that story and include a single line at the bottom of the brief: `_⚠️ WSJ cookie may need refresh — N WSJ articles failed to fetch._`
+
+If `discover_wsj.sh` itself fails (no URLs returned, or HTTP error), the WSJ cookie is likely expired. Surface the same warning.
 
 ### Quality bar
 

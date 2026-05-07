@@ -113,10 +113,19 @@ Same procedure as FT, swap domains:
 1. Log into https://www.wsj.com/ in Chrome.
 2. Cookie-Editor → Export as Header String.
 3. Paste into `~/news-digest/wsj_cookie.txt`. `chmod 600 wsj_cookie.txt`.
-4. Test:
+4. Test URL discovery (the section-page scraper that replaces stale RSS feeds):
    ```bash
-   ./fetch_wsj.sh "$(curl -s 'https://feeds.a.dj.com/rss/RSSMarketsMain.xml' -A 'Mozilla/5.0' | grep -oE '<link>https://www\.wsj\.com/articles/[^<]+</link>' | head -1 | sed 's|<link>||;s|</link>||')"
+   ./discover_wsj.sh --max 5
    ```
+   Should print 5 fresh wsj.com URLs, one per line. If it errors with "no article URLs discovered", the cookie didn't authenticate — re-export.
+5. Test body fetching with one of those URLs:
+   ```bash
+   URL=$(./discover_wsj.sh --max 1)
+   ./fetch_wsj.sh "$URL"
+   ```
+   Should print clean markdown (headline, byline, body).
+
+**Why not WSJ RSS?** WSJ's `feeds.a.dj.com` endpoints periodically return only stale articles (e.g. all items from January 2025) — server-side caching/CDN issue we can't fix. The section-page scraper bypasses it by going to wsj.com directly.
 
 ## 8. Customise `routine-prompt.md` for your install
 

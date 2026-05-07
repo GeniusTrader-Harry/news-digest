@@ -20,7 +20,9 @@ labels: cookie
 ## Output of manual fetcher run
 
 ```
-<!-- Paste the output of `./fetch_ft.sh <url>` or `./fetch_wsj.sh <url>` -->
+<!-- For FT: paste the output of `./fetch_ft.sh <url>` -->
+<!-- For WSJ: try `./discover_wsj.sh --max 3` first (URL discovery), then -->
+<!-- `./fetch_wsj.sh <url>` (body fetch). Paste both outputs. -->
 <!-- IMPORTANT: do NOT paste the contents of your cookie file. -->
 ```
 

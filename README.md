@@ -127,6 +127,7 @@ The published prompt ships with an opinionated example: a markets brief with US-
 | [send_telegram.sh](send_telegram.sh) | Reads `.env`, chunks brief into ≤3800-char messages, POSTs to Telegram Bot API. Falls back to plain-text if Markdown parsing fails. |
 | [fetch_ft.py](fetch_ft.py) / [fetch_ft.sh](fetch_ft.sh) | FT article fetcher: `curl_cffi` Chrome-131 TLS impersonation + your session cookie → JSON-LD body extraction → clean markdown. |
 | [fetch_wsj.py](fetch_wsj.py) / [fetch_wsj.sh](fetch_wsj.sh) | WSJ fetcher: same TLS approach + hybrid extraction (JSON-LD metadata + `<p data-type="paragraph">` regex with style-block stripping). |
+| [discover_wsj.py](discover_wsj.py) / [discover_wsj.sh](discover_wsj.sh) | WSJ URL discovery: scrapes wsj.com section pages (Markets / Finance / Business / Economy) via curl_cffi+cookie and outputs fresh article URLs. Used instead of WSJ's RSS feeds, which periodically go stale for days. |
 | [skills/news-digest-setup/SKILL.md](skills/news-digest-setup/SKILL.md) | Interactive Claude Code skill that walks you through full setup. |
 | [examples/sample-brief.md](examples/sample-brief.md) | A real morning brief — full text. |
 | [SETUP.md](SETUP.md) | Non-interactive 14-step manual walkthrough. |
