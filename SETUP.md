@@ -245,18 +245,20 @@ To cancel later: `sudo pmset repeat cancel`.
 
 In Claude Code, with the `~/news-digest` folder open, ask Claude:
 
-> "Create a scheduled task called `news-digest-daily-brief` that runs at 11:00 daily. The prompt should read `<PROJECT_DIR>/routine-prompt.md` and follow its instructions exactly."
+> "Create a manual-trigger scheduled task called `news-digest-daily-brief`. The prompt should read `<PROJECT_DIR>/routine-prompt.md` and follow its instructions exactly. No cron — I'll run it from the sidebar."
 
 Or use the scheduled-tasks MCP directly. The minimal task spec:
 
 - **taskId**: `news-digest-daily-brief`
-- **cronExpression**: `0 11 * * *` (or whatever time you prefer; cron runs in your local timezone)
+- **cronExpression**: omit (manual-trigger mode, recommended) — OR set `0 11 * * *` for autonomous mode (only if you also did step 11)
 - **prompt**:
   ```
   Read the file `<PROJECT_DIR>/routine-prompt.md` and follow its instructions exactly. Do not skip the Telegram delivery step. If anything fails, surface a clear error.
   ```
 
-Note: Claude Code applies a small dispatch jitter — your `0 11` task actually fires around 11:08.
+**Manual-trigger mode is recommended.** You click Run Now from the Claude Code sidebar each morning. The autonomous cron mode requires your Mac awake, Claude Code running, and Low Power Mode disabled at the fire window — these conditions break often enough on a laptop that manual is more reliable.
+
+If you do use cron: Claude Code applies a small dispatch jitter — your `0 11` task actually fires around 11:08.
 
 ## 13. Test end-to-end with "Run Now"
 
