@@ -13,7 +13,7 @@ The published `routine-prompt.md` is **opinionated** — it's set up for finance
 | Add a new paywalled outlet | new `fetch_X.py` + `routine-prompt.md` | mirror `fetch_wsj.py` pattern |
 | Drop a source | `routine-prompt.md` + `~/.claude/settings.json` | remove from Step 1 + remove `WebFetch(domain:...)` line |
 | Change the view-forming-question style | `routine-prompt.md` | `*🎯 Today's view-forming question*` block |
-| Change Telegram delivery time | `~/.claude/scheduled-tasks/news-digest-daily-brief/SKILL.md` | the `cronExpression` in scheduled-tasks.json (or just ask Claude: "change news-digest to fire at 8am") |
+| Switch between manual / autonomous mode | scheduled-tasks.json | Manual: omit `cronExpression` (default). Autonomous: set e.g. `cronExpression: "0 11 * * *"`. Or just ask Claude: "make news-digest manual-trigger only" or "set news-digest to fire at 8am". See SETUP.md §12 for caveats on autonomous mode. |
 
 This guide tells you the *why* behind each option and how the moving parts interact.
 

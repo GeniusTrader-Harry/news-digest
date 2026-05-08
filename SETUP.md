@@ -10,15 +10,18 @@ This is the **non-interactive** setup guide. If you'd rather have a Claude Code 
 |---|---|---|
 | **1–6**: prerequisites · clone · venv · Telegram bot · `.env` | ~15 min | ✅ Required |
 | **7–8**: FT cookie · WSJ cookie | ~5 min each | ⚪ Optional — skip if no subscription. Brief still works using just CNBC + central banks + WebSearch, but loses most of its analytical depth (FT and WSJ are the primary tier). |
-| **9–14**: customise prompt · Claude Code permissions · trust folder · pmset wake · scheduled task · Run Now test | ~15 min | ✅ Required |
+| **9, 10, 11, 13**: customise prompt · permissions · trust folder · register manual task · Run Now test | ~10 min | ✅ Required |
+| **12**: pmset daily wake schedule | ~1 min | ⚪ Optional — only needed if you want **autonomous** cron-fire (vs the default manual-trigger mode). See "autonomous mode" notes in step 12. |
 
-If you have neither FT nor WSJ subscriptions: skip 7–8 entirely, do the rest. ~25 min total.
+**Default mode is manual-trigger** — you click Run Now from the Claude Code Scheduled sidebar each morning. This is the most reliable mode because nothing depends on your Mac being awake at a fire time. ~25 min total setup if you skip the cookies and the wake schedule.
+
+If you want **autonomous cron-fire** (laptop must be awake + Claude Code running + not in Low Power Mode at fire time), do step 12 as well and use a cron expression in step 13.
 
 ---
 
 ## 0. Prerequisites
 
-- macOS (the wake schedule uses `pmset`; Linux/Windows users need to adapt)
+- macOS (manual-trigger mode works on any platform with Claude Code; the optional `pmset` autonomous-wake schedule in step 12 is Mac-only)
 - [Claude Code](https://claude.com/claude-code) 2.x installed and signed in
 - Python 3.9+ (`python3 --version` to check)
 - A Telegram account
@@ -220,7 +223,9 @@ print('OK')
 ```
 Quit and reopen Claude Code for it to re-read the file.
 
-## 11. Schedule the daily Mac wake (so it fires when laptop is asleep)
+## 11. (OPTIONAL) Schedule the daily Mac wake — only if you want autonomous cron-fire
+
+**Skip this step if running in manual-trigger mode** (the default). You only need it if you set a cron schedule in step 12 and want your Mac to wake from sleep automatically.
 
 ```bash
 sudo pmset repeat wakeorpoweron MTWRFSU 10:55:00
@@ -230,7 +235,9 @@ Verify:
 ```bash
 pmset -g sched
 ```
-You should see `wakepoweron at 10:55AM every day`. This wakes your Mac from sleep at 10:55 every day so the 11:08 task can fire. Doesn't wake from full shutdown — keep your Mac sleeping not off.
+You should see `wakepoweron at 10:55AM every day`. This wakes your Mac from sleep at 10:55 every day so a cron-scheduled task can fire. Doesn't wake from full shutdown — keep your Mac sleeping not off.
+
+**Caveat**: macOS **Low Power Mode** throttles or defers scheduled tasks silently. If you rely on this for autonomous fire, also disable Low Power Mode (System Settings → Battery → Low Power Mode → "Never") or accept that runs will be missed when the battery drops below ~20%.
 
 To cancel later: `sudo pmset repeat cancel`.
 
@@ -267,17 +274,21 @@ If something fails, the agent surfaces an error in the live session output. Comm
 | `## ERROR:` in archive next to FT/WSJ stories | Cookie expired | Re-export per step 6/7 |
 | Permission prompts mid-run | Allowlist incomplete | Add missing entries to `~/.claude/settings.json` |
 | Run shown but no archive | Folder not trusted, or run was stopped early | Trust folder per step 10; let it run full duration |
-| Task didn't fire at 11:08 | Mac was off / shut down at 10:55 | `pmset -g sched` should show wake schedule; ensure Claude Code app is running |
+| Task didn't fire when expected (autonomous mode only) | Mac was off / Claude Code not running / Low Power Mode active at fire time | Best fix: switch to manual-trigger mode. Or: keep Mac on charger, disable Low Power Mode, ensure Claude Code is open at the fire window |
 
-## 14. Set Claude Code to auto-launch
+## 14. (Autonomous mode only) Set Claude Code to auto-launch
 
-So Claude Code is running when 11:08 fires:
+Skip if running in manual-trigger mode. If you set a cron schedule in step 12, you also want Claude Code to be open at the fire window:
 
 System Settings → General → Login Items → click `+` → add Claude.app.
 
 ## You're done
 
-Tomorrow at 11:08 BST (or your local equivalent), a brief should arrive without any input from you. After 1–2 weeks, revisit:
+**Manual mode**: each morning, click Run Now on `news-digest-daily-brief` in the Claude Code Scheduled sidebar. Brief lands in Telegram in 5–7 minutes.
+
+**Autonomous mode**: at your cron fire time (typically ~7 minutes after the cron minute due to dispatch jitter), a brief should arrive without any input from you — *if* your Mac is awake, Claude Code is running, and Low Power Mode is off.
+
+After 1–2 weeks, revisit:
 
 - The theme dictionary — prune themes that didn't recur, add ones that emerged
 - The geography rule — does the actual coverage match your weighting?

@@ -1,6 +1,6 @@
 ---
 name: news-digest-setup
-description: Walks the user through end-to-end setup of the news-digest daily Telegram markets brief. Use when the user has cloned the news-digest repo and is installing it for the first time, OR hits errors during Telegram bot creation, FT/WSJ cookie export, scheduled-task registration, folder trust, or pmset wake-schedule configuration. Triggers include phrases like "set up news-digest", "configure the markets brief", "install the daily Telegram brief", "I cloned news-digest, what now", "help me wire up the FT/WSJ fetcher", "the scheduled task isn't firing", "my FT cookie expired". Do NOT use for customising the brief CONTENT (theme dictionary, geography rule, view question style — point the user at CUSTOMISATION.md instead) or generic Claude Code setup unrelated to this repo.
+description: Walks the user through end-to-end setup of the news-digest Telegram markets brief. Use when the user has cloned the news-digest repo and is installing it for the first time, OR hits errors during Telegram bot creation, FT/WSJ cookie export, scheduled-task registration, or folder trust. Triggers include phrases like "set up news-digest", "configure the markets brief", "install the Telegram brief", "I cloned news-digest, what now", "help me wire up the FT/WSJ fetcher", "the scheduled task isn't firing", "my FT cookie expired". Do NOT use for customising the brief CONTENT (theme dictionary, geography rule, view question style — point the user at CUSTOMISATION.md instead) or generic Claude Code setup unrelated to this repo.
 ---
 
 # news-digest setup walkthrough
@@ -45,9 +45,9 @@ The full step list is in `SETUP.md` at the repo root. **This skill makes the pro
 | 9 | Customise `routine-prompt.md` | §8 | Find-replace `<USER_NAME>` and `<PROJECT_DIR>`. Ask if they want to keep finance framing or change beat (point to CUSTOMISATION.md). |
 | 10 | Claude Code permission allowlist | §9 | Edit `~/.claude/settings.json`. Always `cp` a backup first. Replace path placeholders with their real `<PROJECT_DIR>`. |
 | 11 | Trust the project folder | §10 | Add `hasTrustDialogAccepted: true` entry to `~/.claude.json` projects map. **User must quit + reopen Claude Code** for it to re-read. |
-| 12 | pmset daily wake | §11 | `sudo pmset repeat wakeorpoweron MTWRFSU 10:55:00` (user runs — needs sudo). Verify with `pmset -g sched`. Wakes from sleep, not shutdown. |
-| 13 | Create scheduled task | §12 | Use `mcp__scheduled-tasks__create_scheduled_task`. taskId `news-digest-daily-brief`, cron `0 11 * * *`, prompt reads `<PROJECT_DIR>/routine-prompt.md`. |
-| 14 | Run Now to validate | §13 | Sidebar → Scheduled → Run Now. Wait 5–7 min. Confirm Telegram message + new file in `archive/`. |
+| 12 | (OPTIONAL) pmset daily wake | §11 | **Skip in manual-trigger mode (recommended).** Only run if user explicitly wants autonomous cron-fire: `sudo pmset repeat wakeorpoweron MTWRFSU 10:55:00`. Warn that Low Power Mode breaks this silently. |
+| 13 | Create scheduled task | §12 | Use `mcp__scheduled-tasks__create_scheduled_task`. taskId `news-digest-daily-brief`, prompt reads `<PROJECT_DIR>/routine-prompt.md`. **Default to manual-trigger** — omit `cronExpression`. Only add `cron 0 11 * * *` if the user did step 12 and explicitly wants autonomous mode. |
+| 14 | Run Now to validate | §13 | Sidebar → Scheduled → Run Now. Wait 5–7 min. Confirm Telegram message + new file in `archive/`. This is also how the user runs the brief day-to-day in manual mode. |
 
 ## Common diagnostics
 
@@ -58,7 +58,7 @@ The full step list is in `SETUP.md` at the repo root. **This skill makes the pro
 | Permission prompts mid-run | Allowlist incomplete | Add missing entries (step 10) |
 | "Folder is not trusted" | Trust didn't take | Step 11 again, then quit+reopen Claude Code |
 | Run shown but no archive | Run was stopped early | Let it run full duration |
-| Task didn't fire at expected time | Mac off / Claude Code not running | `pmset -g sched`; ensure Claude Code app is running |
+| (Autonomous-mode only) Task didn't fire | Mac off / Claude Code not running / Low Power Mode | Recommend switching to manual-trigger. Or: disable Low Power Mode, leave Claude Code open, keep Mac on charger |
 
 When the user's first Telegram brief lands cleanly, **the setup is complete**. Tomorrow's automatic run fires without intervention.
 

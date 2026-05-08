@@ -4,7 +4,7 @@
 [![Built with Claude Code](https://img.shields.io/badge/Built_with-Claude_Code-orange)](https://claude.com/claude-code)
 [![Skills format](https://img.shields.io/badge/Agent_Skills-compatible-blue)](https://agentskills.io)
 
-> **Wake up to a curated FT + WSJ markets brief in Telegram every morning.** Subscriber-grade primary sources via paywall-bypass fetchers, theme-tagged stories with one-sentence interview hooks, and a daily view-forming question that forces you to take a position.
+> **A curated FT + WSJ markets brief delivered to Telegram on demand.** Subscriber-grade primary sources via paywall-bypass fetchers, theme-tagged stories with one-sentence interview hooks, and a view-forming question that forces you to take a position. Trigger it from the Claude Code sidebar whenever you want a brief — typically once a day in the morning.
 
 <p align="center">
   <img src="docs/telegram-preview.png" alt="Sample brief on Telegram" width="380">
@@ -21,7 +21,7 @@ Most "AI news digest" tools either (a) regurgitate Reddit/Twitter, or (b) summar
 
 It's designed for someone who reads the news for a *reason* — research, trading, monitoring a beat — not just ambient awareness. The opinionated bits are the value. Fork it, tune it for your beat.
 
-## What lands in your Telegram every morning
+## What lands in your Telegram when you run it
 
 The screenshot above is from a real morning brief. Full text of [a real archived brief is in `examples/sample-brief.md`](examples/sample-brief.md). Quick excerpt:
 
@@ -64,7 +64,7 @@ Defend either side.
 
 ```mermaid
 flowchart TD
-    A[cron 11:08 daily] --> B[Claude Code reads<br/>routine-prompt.md]
+    A[Run Now from sidebar<br/>or cron if you choose] --> B[Claude Code reads<br/>routine-prompt.md]
     B --> C[FT RSS feeds<br/>triage]
     B --> D[WSJ RSS feeds<br/>triage]
     B --> E[CNBC ·<br/>central banks]
@@ -104,7 +104,7 @@ Then in Claude Code, with the folder open, **invoke the bundled setup skill**:
 /news-digest-setup
 ```
 
-It walks you through every remaining step interactively — Telegram bot creation, cookie export, Claude Code permission allowlist, folder trust dialog, `pmset` daily-wake schedule, scheduled task registration, end-to-end test. **For a non-interactive walkthrough see [SETUP.md](SETUP.md).**
+It walks you through every remaining step interactively — Telegram bot creation, cookie export, Claude Code permission allowlist, folder trust dialog, scheduled task registration (set up as manual-trigger by default; cron is optional), end-to-end test. **For a non-interactive walkthrough see [SETUP.md](SETUP.md).**
 
 ## Customisation
 
@@ -123,7 +123,7 @@ The published prompt ships with an opinionated example: a markets brief with US-
 
 | File | Role |
 |---|---|
-| [routine-prompt.md](routine-prompt.md) | The prompt the scheduled task runs every day. Templated — replace `<USER_NAME>` and `<PROJECT_DIR>` during setup. |
+| [routine-prompt.md](routine-prompt.md) | The prompt the scheduled task runs each time you trigger it. Templated — replace `<USER_NAME>` and `<PROJECT_DIR>` during setup. |
 | [send_telegram.sh](send_telegram.sh) | Reads `.env`, chunks brief into ≤3800-char messages, POSTs to Telegram Bot API. Falls back to plain-text if Markdown parsing fails. |
 | [fetch_ft.py](fetch_ft.py) / [fetch_ft.sh](fetch_ft.sh) | FT article fetcher: `curl_cffi` Chrome-131 TLS impersonation + your session cookie → JSON-LD body extraction → clean markdown. |
 | [fetch_wsj.py](fetch_wsj.py) / [fetch_wsj.sh](fetch_wsj.sh) | WSJ fetcher: same TLS approach + hybrid extraction (JSON-LD metadata + `<p data-type="paragraph">` regex with style-block stripping). |
@@ -135,8 +135,8 @@ The published prompt ships with an opinionated example: a markets brief with US-
 
 ## Limitations and honest caveats
 
-- **Mac-only as written**: relies on `pmset` for daily-wake. Linux/Windows users would adapt the schedule mechanism (cron or systemd timer).
-- **Laptop-bound**: Claude Code scheduled tasks run on your machine. If your Mac is off at the fire time, the run is missed. Worth solving with Login Items + lid-closed-but-charging.
+- **Default mode is manual-trigger.** You click Run Now in the Claude Code Scheduled sidebar when you want a brief — typically once each morning. This is the most reliable mode because it doesn't depend on your laptop being awake at a specific time.
+- **Autonomous-cron mode is optional but unreliable on laptops.** If you set a cron schedule, the run fires only if Claude Code is open AND the Mac is awake AND not in Low Power Mode at fire time. macOS Low Power Mode in particular throttles or defers scheduled tasks silently. For true daily autonomy, run on an always-on machine (a $4/month VPS works fine).
 - **Cookie maintenance**: FT and WSJ session cookies expire every 2–4 weeks. The brief detects expiry (`⚠️ cookie may need refresh`) — re-export from Chrome takes ~30 seconds.
 - **Quality varies with model effort**: targeted at Claude Code's high-effort mode. Lower-effort runs produce blander hooks.
 - **Brand-new repo**: no community usage yet, no proven robustness across edge cases. Issues + PRs welcome.
@@ -145,7 +145,7 @@ The published prompt ships with an opinionated example: a markets brief with US-
 
 Fork it, tune it, share it back. Areas where contributions land especially well:
 
-- Linux / Windows wake-schedule equivalents (cron, systemd, Task Scheduler)
+- Linux / Windows / VPS deployment recipes for fully autonomous mode
 - Other paywalled outlets people have working fetchers for (Economist, Barron's, etc.)
 - Theme dictionaries for non-finance beats (climate, biotech, geopolitics, etc.)
 
