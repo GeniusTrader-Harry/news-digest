@@ -3,14 +3,14 @@
 > ⚠️ **This is a template, not a working prompt.** Two placeholders MUST be replaced before the brief works:
 >
 > - `<USER_NAME>` → your name (used by the agent to address you)
-> - `<PROJECT_DIR>` → absolute path to your install (e.g. `/Users/you/news-digest`)
+> - `<PROJECT_DIR>` → absolute path to your install (e.g. `/Users/you/news-fetch`)
 >
 > Two things you SHOULD also tune (see [CUSTOMISATION.md](CUSTOMISATION.md)):
 >
 > - The "for `<USER_NAME>`" framing on this line — currently set up for finance recruiting; swap for your beat (VC scouting, climate-tech monitoring, biotech, etc.)
 > - The Geography rule, theme dictionary, section sizes — your editorial taste, not someone else's.
 >
-> The bundled setup skill (`/news-digest-setup` once installed) walks you through this interactively.
+> The bundled setup skill (`/news-fetch-setup` once installed) walks you through this interactively.
 
 You are generating <USER_NAME>'s daily commercial-awareness briefing. They are preparing for sales & trading, equity research, and asset management interviews — the brief should help them sound informed and prepared on a desk call or superday.
 
@@ -265,7 +265,7 @@ The sender chunks at 3800 chars, posts to Telegram, and falls back to plain-text
 **Failure path — never go silent**. If the run errors before a brief was assembled (e.g. all primary sources failed, every FT/WSJ fetch returned ## ERROR, synthesis crashed), the user has no other channel to learn the run broke. **Send a short error notice via the same sender:**
 
 ```bash
-echo "❌ news-digest failed at $(date +%H:%M): <one-line reason>" \
+echo "❌ news-fetch failed at $(date +%H:%M): <one-line reason>" \
   | "<PROJECT_DIR>/send_telegram.sh"
 ```
 

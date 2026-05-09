@@ -13,7 +13,7 @@ The published `routine-prompt.md` is **opinionated** — it's set up for finance
 | Add a new paywalled outlet | new `fetch_X.py` + `routine-prompt.md` | mirror `fetch_wsj.py` pattern |
 | Drop a source | `routine-prompt.md` + `~/.claude/settings.json` | remove from Step 1 + remove `WebFetch(domain:...)` line |
 | Change the view-forming-question style | `routine-prompt.md` | `*🎯 Today's view-forming question*` block |
-| Switch between manual / autonomous mode | scheduled-tasks.json | Manual: omit `cronExpression` (default). Autonomous: set e.g. `cronExpression: "0 11 * * *"`. Or just ask Claude: "make news-digest manual-trigger only" or "set news-digest to fire at 8am". See SETUP.md §12 for caveats on autonomous mode. |
+| Switch between manual / autonomous mode | scheduled-tasks.json | Manual: omit `cronExpression` (default). Autonomous: set e.g. `cronExpression: "0 11 * * *"`. Or just ask Claude: "make news-fetch manual-trigger only" or "set news-fetch to fire at 8am". See SETUP.md §12 for caveats on autonomous mode. |
 
 This guide tells you the *why* behind each option and how the moving parts interact.
 
@@ -184,7 +184,7 @@ Removing these makes the brief noticeably worse. They exist because LLMs default
 
 After a week of briefs:
 
-1. **Read your archive** (`~/news-digest/archive/`). Are the themes you tagged actually recurring? Are the geography shares roughly matching your target?
+1. **Read your archive** (`~/news-fetch/archive/`). Are the themes you tagged actually recurring? Are the geography shares roughly matching your target?
 2. **Check the deep-read picks**. If the agent is forcing picks on slow days, your filter isn't strict enough.
 3. **Test the view-forming questions** on yourself. Can you actually take a position and defend it? If they feel abstract or unanswerable, the prompt examples need to be more grounded.
 4. **Notice missing stories**. If you read an FT piece in your browser that didn't make the brief, ask why — usually it means a theme is missing from the dictionary or a source isn't weighted right.

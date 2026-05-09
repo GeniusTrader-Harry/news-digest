@@ -1,6 +1,6 @@
 # SETUP — manual walkthrough
 
-This is the **non-interactive** setup guide. If you'd rather have a Claude Code skill walk you through it step by step, use `/news-digest-setup` after you clone the repo.
+This is the **non-interactive** setup guide. If you'd rather have a Claude Code skill walk you through it step by step, use `/news-fetch-setup` after you clone the repo.
 
 **Estimated time: 30–45 minutes** — mostly waiting on browser tabs and BotFather prompts; the actual scripted work is ~10 minutes.
 
@@ -29,11 +29,11 @@ If you want **autonomous cron-fire** (laptop must be awake + Claude Code running
 
 ## 1. Clone the repo
 
-Pick a location that's NOT inside `~/Documents/` (which is iCloud-synced on most Macs and can produce intermittent file errors). The recommended location is `~/news-digest`:
+Pick a location that's NOT inside `~/Documents/` (which is iCloud-synced on most Macs and can produce intermittent file errors). The recommended location is `~/news-fetch`:
 
 ```bash
-git clone https://github.com/GeniusTrader-Harry/news-digest.git ~/news-digest
-cd ~/news-digest
+git clone https://github.com/GeniusTrader-Harry/news-fetch.git ~/news-fetch
+cd ~/news-fetch
 ```
 
 If you put it elsewhere, remember the absolute path — you'll need it in step 8 to replace `<PROJECT_DIR>` in the routine prompt.
@@ -99,7 +99,7 @@ Skip this if you don't have an FT subscription. The brief still works without FT
 1. In Chrome, install the **Cookie-Editor** extension ([Chrome Web Store](https://chromewebstore.google.com/detail/cookie-editor/hlkenndednhfkekhgcdicdfddnkalmdm)) and pin it to the toolbar.
 2. Log into **https://www.ft.com/** (Imperial / personal sub / whatever you have).
 3. Click the Cookie-Editor icon → **Export → Export as Header String** at the bottom of the popup.
-4. Paste the result into `~/news-digest/ft_cookie.txt` (create the file). Lock it down:
+4. Paste the result into `~/news-fetch/ft_cookie.txt` (create the file). Lock it down:
    ```bash
    chmod 600 ft_cookie.txt
    ```
@@ -115,7 +115,7 @@ Same procedure as FT, swap domains:
 
 1. Log into https://www.wsj.com/ in Chrome.
 2. Cookie-Editor → Export as Header String.
-3. Paste into `~/news-digest/wsj_cookie.txt`. `chmod 600 wsj_cookie.txt`.
+3. Paste into `~/news-fetch/wsj_cookie.txt`. `chmod 600 wsj_cookie.txt`.
 4. Test URL discovery (the section-page scraper that replaces stale RSS feeds):
    ```bash
    ./discover_wsj.sh --max 5
@@ -138,13 +138,13 @@ nano routine-prompt.md
 
 Find-and-replace:
 - `<USER_NAME>` → your name (or the name the agent should use to address you)
-- `<PROJECT_DIR>` → your absolute install path (e.g. `/Users/yourname/news-digest`)
+- `<PROJECT_DIR>` → your absolute install path (e.g. `/Users/yourname/news-fetch`)
 
 Optional but encouraged: tune the audience framing in line 1, the geography rule, the theme dictionary, and section sizes — see [CUSTOMISATION.md](CUSTOMISATION.md). The defaults are an example for finance-recruiting prep; your beat is probably different.
 
 ## 9. Add Claude Code permissions
 
-Edit `~/.claude/settings.json`. If `permissions.allow` doesn't exist, create it. Add the following entries (replace `/Users/yourname/news-digest` with your real `<PROJECT_DIR>`):
+Edit `~/.claude/settings.json`. If `permissions.allow` doesn't exist, create it. Add the following entries (replace `/Users/yourname/news-fetch` with your real `<PROJECT_DIR>`):
 
 ```json
 {
@@ -168,10 +168,10 @@ Edit `~/.claude/settings.json`. If `permissions.allow` doesn't exist, create it.
       "WebFetch(domain:wsj.com)",
       "WebFetch(domain:www.wsj.com)",
       "WebFetch(domain:feeds.a.dj.com)",
-      "Bash(/Users/yourname/news-digest/send_telegram.sh)",
-      "Bash(/Users/yourname/news-digest/fetch_ft.sh:*)",
-      "Bash(/Users/yourname/news-digest/fetch_wsj.sh:*)",
-      "Bash(/Users/yourname/news-digest/discover_wsj.sh:*)",
+      "Bash(/Users/yourname/news-fetch/send_telegram.sh)",
+      "Bash(/Users/yourname/news-fetch/fetch_ft.sh:*)",
+      "Bash(/Users/yourname/news-fetch/fetch_wsj.sh:*)",
+      "Bash(/Users/yourname/news-fetch/discover_wsj.sh:*)",
       "Bash(curl:*)",
       "Bash(date:*)",
       "Bash(mkdir:*)",
@@ -189,8 +189,8 @@ Edit `~/.claude/settings.json`. If `permissions.allow` doesn't exist, create it.
       "Bash(uniq:*)",
       "Bash(wc:*)",
       "Bash(python3:*)",
-      "Read(/Users/yourname/news-digest/**)",
-      "Write(/Users/yourname/news-digest/archive/**)"
+      "Read(/Users/yourname/news-fetch/**)",
+      "Write(/Users/yourname/news-fetch/archive/**)"
     ]
   }
 }
@@ -204,7 +204,7 @@ This pre-approves the tools the routine uses, so the scheduled task fires withou
 
 Claude Code refuses to fire scheduled tasks from untrusted folders. To trust it:
 
-**Option A — UI**: Open Claude Code → File → Open Folder → navigate to `~/news-digest` → click **Trust** when prompted.
+**Option A — UI**: Open Claude Code → File → Open Folder → navigate to `~/news-fetch` → click **Trust** when prompted.
 
 **Option B — direct edit**: Add an entry to `~/.claude.json`:
 ```python
@@ -212,7 +212,7 @@ python3 -c "
 import json
 p = '/Users/yourname/.claude.json'  # adjust username
 with open(p) as f: d = json.load(f)
-d.setdefault('projects', {})['/Users/yourname/news-digest'] = {
+d.setdefault('projects', {})['/Users/yourname/news-fetch'] = {
     'allowedTools': [],
     'hasTrustDialogAccepted': True,
     'projectOnboardingSeenCount': 0,
@@ -243,13 +243,13 @@ To cancel later: `sudo pmset repeat cancel`.
 
 ## 12. Create the scheduled task
 
-In Claude Code, with the `~/news-digest` folder open, ask Claude:
+In Claude Code, with the `~/news-fetch` folder open, ask Claude:
 
-> "Create a manual-trigger scheduled task called `news-digest-daily-brief`. The prompt should read `<PROJECT_DIR>/routine-prompt.md` and follow its instructions exactly. No cron — I'll run it from the sidebar."
+> "Create a manual-trigger scheduled task called `news-fetch-daily-brief`. The prompt should read `<PROJECT_DIR>/routine-prompt.md` and follow its instructions exactly. No cron — I'll run it from the sidebar."
 
 Or use the scheduled-tasks MCP directly. The minimal task spec:
 
-- **taskId**: `news-digest-daily-brief`
+- **taskId**: `news-fetch-daily-brief`
 - **cronExpression**: omit (manual-trigger mode, recommended) — OR set `0 11 * * *` for autonomous mode (only if you also did step 11)
 - **prompt**:
   ```
@@ -262,11 +262,11 @@ If you do use cron: Claude Code applies a small dispatch jitter — your `0 11` 
 
 ## 13. Test end-to-end with "Run Now"
 
-In the Claude Code sidebar → **Scheduled** section → click your `news-digest-daily-brief` task → **Run now**.
+In the Claude Code sidebar → **Scheduled** section → click your `news-fetch-daily-brief` task → **Run now**.
 
 Wait 5–7 minutes. You should:
 1. See a brief land in your Telegram chat with the bot
-2. See a new file `~/news-digest/archive/$(date +%F).md`
+2. See a new file `~/news-fetch/archive/$(date +%F).md`
 
 If something fails, the agent surfaces an error in the live session output. Common issues + fixes:
 
@@ -286,7 +286,7 @@ System Settings → General → Login Items → click `+` → add Claude.app.
 
 ## You're done
 
-**Manual mode**: each morning, click Run Now on `news-digest-daily-brief` in the Claude Code Scheduled sidebar. Brief lands in Telegram in 5–7 minutes.
+**Manual mode**: each morning, click Run Now on `news-fetch-daily-brief` in the Claude Code Scheduled sidebar. Brief lands in Telegram in 5–7 minutes.
 
 **Autonomous mode**: at your cron fire time (typically ~7 minutes after the cron minute due to dispatch jitter), a brief should arrive without any input from you — *if* your Mac is awake, Claude Code is running, and Low Power Mode is off.
 

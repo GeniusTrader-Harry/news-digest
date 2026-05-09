@@ -1,9 +1,9 @@
 ---
-name: news-digest-setup
-description: Walks the user through end-to-end setup of the news-digest Telegram markets brief. Use when the user has cloned the news-digest repo and is installing it for the first time, OR hits errors during Telegram bot creation, FT/WSJ cookie export, scheduled-task registration, or folder trust. Triggers include phrases like "set up news-digest", "configure the markets brief", "install the Telegram brief", "I cloned news-digest, what now", "help me wire up the FT/WSJ fetcher", "the scheduled task isn't firing", "my FT cookie expired". Do NOT use for customising the brief CONTENT (theme dictionary, geography rule, view question style — point the user at CUSTOMISATION.md instead) or generic Claude Code setup unrelated to this repo.
+name: news-fetch-setup
+description: Walks the user through end-to-end setup of the news-fetch Telegram markets brief. Use when the user has cloned the news-fetch repo and is installing it for the first time, OR hits errors during Telegram bot creation, FT/WSJ cookie export, scheduled-task registration, or folder trust. Triggers include phrases like "set up news-fetch", "configure the markets brief", "install the Telegram brief", "I cloned news-fetch, what now", "help me wire up the FT/WSJ fetcher", "the scheduled task isn't firing", "my FT cookie expired". Do NOT use for customising the brief CONTENT (theme dictionary, geography rule, view question style — point the user at CUSTOMISATION.md instead) or generic Claude Code setup unrelated to this repo.
 ---
 
-# news-digest setup walkthrough
+# news-fetch setup walkthrough
 
 You are walking the user through configuring a daily markets brief that fires at a chosen time, fetches news, and delivers it to Telegram.
 
@@ -28,14 +28,14 @@ The full step list is in `SETUP.md` at the repo root. **This skill makes the pro
 4. **Default assumptions** (state them, don't ignore them):
    - macOS
    - Claude Code 2.x signed in
-   - Repo at `~/news-digest` (offer alternatives if asked)
+   - Repo at `~/news-fetch` (offer alternatives if asked)
 
 ## The 14 steps (one-liners — full detail in SETUP.md)
 
 | # | Step | SETUP.md ref | Notes |
 |---|---|---|---|
 | 1 | Confirm prerequisites | §0 | `python3 --version` ≥ 3.9; `which claude`; Telegram account. |
-| 2 | Verify clone location | §1 | `~/news-digest` recommended. NOT `~/Documents/` (iCloud EINTR risk). |
+| 2 | Verify clone location | §1 | `~/news-fetch` recommended. NOT `~/Documents/` (iCloud EINTR risk). |
 | 3 | Install Python deps | §2 | `python3 -m venv venv`, `pip install curl_cffi`. Verify `import curl_cffi` works. |
 | 4 | Create Telegram bot | §3 | User does this in Telegram with @BotFather. Wait for them to confirm token + Start. |
 | 5 | Get chat_id | §4 | `curl getUpdates`. If empty, user sends "hi" to bot first. |
@@ -46,7 +46,7 @@ The full step list is in `SETUP.md` at the repo root. **This skill makes the pro
 | 10 | Claude Code permission allowlist | §9 | Edit `~/.claude/settings.json`. Always `cp` a backup first. Replace path placeholders with their real `<PROJECT_DIR>`. |
 | 11 | Trust the project folder | §10 | Add `hasTrustDialogAccepted: true` entry to `~/.claude.json` projects map. **User must quit + reopen Claude Code** for it to re-read. |
 | 12 | (OPTIONAL) pmset daily wake | §11 | **Skip in manual-trigger mode (recommended).** Only run if user explicitly wants autonomous cron-fire: `sudo pmset repeat wakeorpoweron MTWRFSU 10:55:00`. Warn that Low Power Mode breaks this silently. |
-| 13 | Create scheduled task | §12 | Use `mcp__scheduled-tasks__create_scheduled_task`. taskId `news-digest-daily-brief`, prompt reads `<PROJECT_DIR>/routine-prompt.md`. **Default to manual-trigger** — omit `cronExpression`. Only add `cron 0 11 * * *` if the user did step 12 and explicitly wants autonomous mode. |
+| 13 | Create scheduled task | §12 | Use `mcp__scheduled-tasks__create_scheduled_task`. taskId `news-fetch-daily-brief`, prompt reads `<PROJECT_DIR>/routine-prompt.md`. **Default to manual-trigger** — omit `cronExpression`. Only add `cron 0 11 * * *` if the user did step 12 and explicitly wants autonomous mode. |
 | 14 | Run Now to validate | §13 | Sidebar → Scheduled → Run Now. Wait 5–7 min. Confirm Telegram message + new file in `archive/`. This is also how the user runs the brief day-to-day in manual mode. |
 
 ## Common diagnostics
